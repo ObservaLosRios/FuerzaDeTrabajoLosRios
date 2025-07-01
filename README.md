@@ -240,7 +240,7 @@ Distribuido bajo Licencia MIT. Ver `LICENSE` para más información.
 **Bruno San Martin**
 - GitHub: [@SanMaBruno](https://github.com/SanMaBruno)
 - LinkedIn: [Bruno San Martin](https://www.linkedin.com/in/sanmabruno/)
-- Email: bruno.sanmartin@example.com
+- Email: bruno.sanmartin@uach.cl
 
 ## 🙏 Agradecimientos
 
