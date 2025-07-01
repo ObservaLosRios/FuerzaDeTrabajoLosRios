@@ -240,12 +240,6 @@ Distribuido bajo Licencia MIT. Ver `LICENSE` para más información.
 **Bruno San Martin**
 - GitHub: [@SanMaBruno](https://github.com/SanMaBruno)
 - LinkedIn: [Bruno San Martin](https://www.linkedin.com/in/sanmabruno/)
-- Email: bruno.sanmartin@uach.cl
-
-## 🙏 Agradecimientos
-
-- [Instituto Nacional de Estadísticas (INE)](https://www.ine.cl/)
-- Universidad Austral de Chile (UACh) - Valdivia, Los Ríos
 
 ## 📊 Métricas del Proyecto
 
@@ -253,7 +247,6 @@ Distribuido bajo Licencia MIT. Ver `LICENSE` para más información.
 - **15 años** de datos históricos
 - **3 variables** principales (Total, Hombres, Mujeres)
 - **100% cobertura** de tests
-- **Clean Code** compliance
 
 ---
 
