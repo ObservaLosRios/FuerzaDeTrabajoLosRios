@@ -197,7 +197,7 @@ Distribuido bajo la Licencia MIT. Ver `LICENSE` para más información.
 
 **Bruno San Martin**
 - GitHub: [@SanMaBruno](https://github.com/SanMaBruno)
-- LinkedIn: [Bruno San Martin](https://linkedin.com/in/bruno-san-martin)
+- LinkedIn: [Bruno San Martin](https://www.linkedin.com/in/sanmabruno/)
 
 ## 🙏 Agradecimientos
 
