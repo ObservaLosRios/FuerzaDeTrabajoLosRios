@@ -199,11 +199,6 @@ Distribuido bajo la Licencia MIT. Ver `LICENSE` para más información.
 - GitHub: [@SanMaBruno](https://github.com/SanMaBruno)
 - LinkedIn: [Bruno San Martin](https://www.linkedin.com/in/sanmabruno/)
 
-## 🙏 Agradecimientos
-
-- [Instituto Nacional de Estadísticas (INE)](https://www.ine.cl/) por proporcionar los datos oficiales
-- Comunidad de Data Science de Chile
-- Contribuidores del proyecto
 
 ## 📊 Roadmap
 
