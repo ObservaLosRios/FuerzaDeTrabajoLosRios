@@ -1,14 +1,14 @@
 """
-Models package for statistical and machine learning models.
+Módulo de modelos de análisis para Los Ríos
+Clean Code: modelos específicos del dominio con responsabilidades claras
 """
 
-__version__ = "0.1.0"
-__author__ = "Bruno San Martin"
+from .labour_analyzer import LabourAnalyzer
+from .demographics import DemographicsAnalyzer
+from .statistics_engine import StatisticsEngine
 
-# TODO: Implementar modelos avanzados
-# - Forecasting models (ARIMA, Prophet, etc.)
-# - Classification models for labor market segments
-# - Clustering for regional analysis
-# - Time series analysis models
-
-__all__ = []
+__all__ = [
+    "LabourAnalyzer",
+    "DemographicsAnalyzer",
+    "StatisticsEngine"
+]

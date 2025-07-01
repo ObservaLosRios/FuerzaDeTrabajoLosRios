@@ -1,16 +1,15 @@
 """
-Utilities package for validators, loggers, and helper functions.
+Módulo de utilidades para el proyecto Los Ríos
+Clean Code: funciones auxiliares con responsabilidades específicas
 """
 
-from .validators import DataValidator, LabourForceValidator
-from .logger_config import get_logger, configure_logging
-
-__version__ = "0.1.0"
-__author__ = "Bruno San Martin"
+from .validators import DataValidator
+from .logger import LoggerConfig, setup_logger
+from .helpers import HelperFunctions
 
 __all__ = [
     "DataValidator",
-    "LabourForceValidator",
-    "get_logger",
-    "configure_logging"
+    "LoggerConfig", 
+    "setup_logger",
+    "HelperFunctions"
 ]

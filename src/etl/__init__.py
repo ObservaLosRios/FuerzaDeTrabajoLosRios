@@ -1,18 +1,14 @@
 """
-ETL package for INE Chile Labour Force Analysis.
-Contains modules for data extraction, transformation, and loading.
+Módulo ETL para análisis de Los Ríos
+Clean Code: módulos bien organizados con responsabilidades claras
 """
 
-from .data_processor import LabourForceProcessor
-from .base import ETLPipeline, DataExtractor, DataTransformer, DataLoader
-
-__version__ = "0.1.0"
-__author__ = "Bruno San Martin"
+from .data_extractor import LosRiosDataExtractor
+from .data_transformer import LosRiosDataTransformer  
+from .data_loader import LosRiosDataLoader
 
 __all__ = [
-    "LabourForceProcessor",
-    "ETLPipeline", 
-    "DataExtractor",
-    "DataTransformer", 
-    "DataLoader"
+    "LosRiosDataExtractor",
+    "LosRiosDataTransformer", 
+    "LosRiosDataLoader"
 ]

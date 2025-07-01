@@ -1,314 +1,330 @@
 """
-Data validation utilities for the Labour Force analysis project.
+Validadores de datos para el proyecto Los Ríos
+Clean Code: Principio de Responsabilidad Única - solo validación
 """
 
 import pandas as pd
 import numpy as np
-from typing import List, Dict, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional, Tuple
+import logging
 from datetime import datetime
-import re
 
-from .logger_config import get_logger
-
-logger = get_logger(__name__)
+from ...config import LosRiosConfig, DataConfig
 
 
 class DataValidator:
-    """Comprehensive data validator for Labour Force data."""
+    """
+    Clase para validar datos en todas las etapas del pipeline.
+    
+    Clean Code Principles:
+    - Single Responsibility: Solo validación de datos
+    - Pure Functions: Métodos sin efectos secundarios
+    - Descriptive Names: Nombres claros de métodos
+    """
     
     def __init__(self):
-        self.validation_results = {}
+        """Inicializa el validador con configuraciones."""
+        self.config = LosRiosConfig()
+        self.data_config = DataConfig()
+        self.logger = logging.getLogger(self.__class__.__name__)
     
-    def validate_dataframe(
-        self,
-        df: pd.DataFrame,
-        required_columns: Optional[List[str]] = None,
-        numeric_columns: Optional[List[str]] = None,
-        date_columns: Optional[List[str]] = None
-    ) -> Dict[str, bool]:
+    def validate_dataframe(self, df: pd.DataFrame) -> bool:
         """
-        Comprehensive DataFrame validation.
+        Valida que un DataFrame tenga estructura básica válida.
         
         Args:
-            df: DataFrame to validate
-            required_columns: List of required column names
-            numeric_columns: List of columns that should be numeric
-            date_columns: List of columns that should be dates
-        
+            df: DataFrame a validar
+            
         Returns:
-            Dictionary with validation results
+            True si es válido, False en caso contrario
         """
-        results = {}
-        
-        # Basic structure validation
-        results['not_empty'] = self._check_not_empty(df)
-        results['has_required_columns'] = self._check_required_columns(df, required_columns)
-        results['no_duplicate_rows'] = self._check_no_duplicates(df)
-        
-        # Column type validation
-        if numeric_columns:
-            results['numeric_columns_valid'] = self._check_numeric_columns(df, numeric_columns)
-        
-        if date_columns:
-            results['date_columns_valid'] = self._check_date_columns(df, date_columns)
-        
-        # Data quality checks
-        results['missing_data_acceptable'] = self._check_missing_data(df)
-        results['no_extreme_outliers'] = self._check_outliers(df, numeric_columns)
-        
-        # Log results
-        passed_checks = sum(results.values())
-        total_checks = len(results)
-        logger.info(f"Data validation: {passed_checks}/{total_checks} checks passed")
-        
-        self.validation_results = results
-        return results
-    
-    def _check_not_empty(self, df: pd.DataFrame) -> bool:
-        """Check if DataFrame is not empty."""
-        is_valid = len(df) > 0 and len(df.columns) > 0
-        if not is_valid:
-            logger.error("DataFrame is empty")
-        return is_valid
-    
-    def _check_required_columns(
-        self,
-        df: pd.DataFrame,
-        required_columns: Optional[List[str]]
-    ) -> bool:
-        """Check if all required columns are present."""
-        if not required_columns:
+        try:
+            if df is None:
+                self.logger.error("DataFrame es None")
+                return False
+            
+            if not isinstance(df, pd.DataFrame):
+                self.logger.error("El objeto no es un DataFrame")
+                return False
+            
+            if df.empty:
+                self.logger.warning("DataFrame está vacío")
+                return False
+            
+            if len(df.columns) == 0:
+                self.logger.error("DataFrame no tiene columnas")
+                return False
+            
             return True
-        
-        missing_columns = [col for col in required_columns if col not in df.columns]
-        
-        if missing_columns:
-            logger.error(f"Missing required columns: {missing_columns}")
+            
+        except Exception as e:
+            self.logger.error(f"Error validando DataFrame: {str(e)}")
             return False
-        
-        return True
     
-    def _check_no_duplicates(self, df: pd.DataFrame) -> bool:
-        """Check for duplicate rows."""
-        duplicate_count = df.duplicated().sum()
+    def validate_los_rios_data(self, df: pd.DataFrame) -> Tuple[bool, List[str]]:
+        """
+        Valida que los datos pertenezcan específicamente a Los Ríos.
         
-        if duplicate_count > 0:
-            logger.warning(f"Found {duplicate_count} duplicate rows")
-            return False
+        Args:
+            df: DataFrame con datos del INE
+            
+        Returns:
+            Tupla (es_valido, lista_errores)
+        """
+        errors = []
         
-        return True
+        try:
+            # Verificar columnas requeridas
+            required_columns = self.data_config.REQUIRED_COLUMNS
+            missing_columns = [col for col in required_columns if col not in df.columns]
+            
+            if missing_columns:
+                errors.append(f"Columnas faltantes: {missing_columns}")
+            
+            # Verificar que existan datos de Los Ríos
+            if 'region' in df.columns:
+                los_rios_data = df[df['region'] == self.config.REGION_CODE]
+                if los_rios_data.empty:
+                    errors.append(f"No se encontraron datos para {self.config.REGION_CODE}")
+                else:
+                    self.logger.info(f"Encontrados {len(los_rios_data)} registros de Los Ríos")
+            
+            # Verificar tipos de datos
+            if 'ano_trimestre' in df.columns:
+                if not pd.api.types.is_string_dtype(df['ano_trimestre']):
+                    errors.append("Columna 'ano_trimestre' debe ser string")
+            
+            # Verificar valores numéricos válidos
+            numeric_columns = ['fuerza_de_trabajo', 'hombres', 'mujeres']
+            for col in numeric_columns:
+                if col in df.columns:
+                    if df[col].isna().all():
+                        errors.append(f"Columna '{col}' contiene solo valores nulos")
+                    elif (df[col] < 0).any():
+                        errors.append(f"Columna '{col}' contiene valores negativos")
+            
+            is_valid = len(errors) == 0
+            return is_valid, errors
+            
+        except Exception as e:
+            errors.append(f"Error en validación: {str(e)}")
+            return False, errors
     
-    def _check_numeric_columns(
-        self,
-        df: pd.DataFrame,
-        numeric_columns: List[str]
-    ) -> bool:
-        """Check if specified columns are numeric."""
-        invalid_columns = []
+    def validate_date_format(self, date_column: pd.Series) -> bool:
+        """
+        Valida formato de fechas/períodos.
         
-        for col in numeric_columns:
-            if col in df.columns:
-                if not pd.api.types.is_numeric_dtype(df[col]):
-                    # Try to convert to numeric
-                    try:
-                        pd.to_numeric(df[col], errors='raise')
-                    except:
-                        invalid_columns.append(col)
-        
-        if invalid_columns:
-            logger.error(f"Non-numeric columns: {invalid_columns}")
-            return False
-        
-        return True
-    
-    def _check_date_columns(
-        self,
-        df: pd.DataFrame,
-        date_columns: List[str]
-    ) -> bool:
-        """Check if specified columns can be converted to dates."""
-        invalid_columns = []
-        
-        for col in date_columns:
-            if col in df.columns:
-                try:
-                    pd.to_datetime(df[col], errors='raise')
-                except:
-                    invalid_columns.append(col)
-        
-        if invalid_columns:
-            logger.error(f"Invalid date columns: {invalid_columns}")
-            return False
-        
-        return True
-    
-    def _check_missing_data(
-        self,
-        df: pd.DataFrame,
-        threshold: float = 0.3
-    ) -> bool:
-        """Check if missing data is within acceptable threshold."""
-        missing_ratio = df.isnull().sum() / len(df)
-        problematic_columns = missing_ratio[missing_ratio > threshold]
-        
-        if len(problematic_columns) > 0:
-            logger.warning(
-                f"Columns with >30% missing data: {problematic_columns.to_dict()}"
-            )
-            return False
-        
-        return True
-    
-    def _check_outliers(
-        self,
-        df: pd.DataFrame,
-        numeric_columns: Optional[List[str]],
-        z_threshold: float = 3.0
-    ) -> bool:
-        """Check for extreme outliers using Z-score."""
-        if not numeric_columns:
-            return True
-        
-        outlier_counts = {}
-        
-        for col in numeric_columns:
-            if col in df.columns and pd.api.types.is_numeric_dtype(df[col]):
-                # Calculate Z-scores
-                z_scores = np.abs((df[col] - df[col].mean()) / df[col].std())
-                outlier_count = (z_scores > z_threshold).sum()
+        Args:
+            date_column: Serie con fechas/períodos
+            
+        Returns:
+            True si el formato es válido
+        """
+        try:
+            # Verificar que no esté vacía
+            if date_column.empty:
+                return False
+            
+            # Verificar formato típico del INE (ej: "2024-MAR")
+            sample_values = date_column.dropna().head(10)
+            
+            for value in sample_values:
+                if not isinstance(value, str):
+                    return False
                 
-                if outlier_count > 0:
-                    outlier_counts[col] = outlier_count
-        
-        if outlier_counts:
-            total_outliers = sum(outlier_counts.values())
-            outlier_ratio = total_outliers / len(df)
+                # Formato esperado: YYYY-MES o similar
+                if len(value.split('-')) != 2:
+                    self.logger.warning(f"Formato de fecha inesperado: {value}")
+                    return False
             
-            logger.warning(f"Found outliers in columns: {outlier_counts}")
+            return True
             
-            # Consider acceptable if less than 5% outliers
-            return outlier_ratio < 0.05
-        
-        return True
+        except Exception as e:
+            self.logger.error(f"Error validando formato de fecha: {str(e)}")
+            return False
     
-    def get_validation_report(self) -> str:
-        """Generate a detailed validation report."""
-        if not self.validation_results:
-            return "No validation results available. Run validate_dataframe() first."
+    def validate_numeric_range(
+        self, 
+        series: pd.Series, 
+        min_value: Optional[float] = None,
+        max_value: Optional[float] = None
+    ) -> Tuple[bool, List[str]]:
+        """
+        Valida que los valores numéricos estén en un rango esperado.
         
-        report_lines = ["Data Validation Report", "=" * 25]
+        Args:
+            series: Serie numérica a validar
+            min_value: Valor mínimo permitido
+            max_value: Valor máximo permitido
+            
+        Returns:
+            Tupla (es_valido, lista_errores)
+        """
+        errors = []
         
-        for check, passed in self.validation_results.items():
-            status = "✓ PASS" if passed else "✗ FAIL"
-            check_name = check.replace('_', ' ').title()
-            report_lines.append(f"{check_name}: {status}")
-        
-        passed_count = sum(self.validation_results.values())
-        total_count = len(self.validation_results)
-        
-        report_lines.append("")
-        report_lines.append(f"Overall: {passed_count}/{total_count} checks passed")
-        
-        if passed_count == total_count:
-            report_lines.append("🎉 All validations passed!")
-        else:
-            report_lines.append("⚠️  Some validations failed. Check logs for details.")
-        
-        return "\n".join(report_lines)
-
-
-class LabourForceValidator(DataValidator):
-    """Specialized validator for Labour Force data."""
+        try:
+            # Verificar que sea numérica
+            if not pd.api.types.is_numeric_dtype(series):
+                errors.append("La serie no es numérica")
+                return False, errors
+            
+            # Verificar valores nulos
+            null_count = series.isna().sum()
+            if null_count > 0:
+                errors.append(f"Encontrados {null_count} valores nulos")
+            
+            # Verificar rango mínimo
+            if min_value is not None:
+                below_min = (series < min_value).sum()
+                if below_min > 0:
+                    errors.append(f"{below_min} valores por debajo del mínimo ({min_value})")
+            
+            # Verificar rango máximo
+            if max_value is not None:
+                above_max = (series > max_value).sum()
+                if above_max > 0:
+                    errors.append(f"{above_max} valores por encima del máximo ({max_value})")
+            
+            # Verificar valores infinitos
+            inf_count = np.isinf(series).sum()
+            if inf_count > 0:
+                errors.append(f"Encontrados {inf_count} valores infinitos")
+            
+            is_valid = len(errors) == 0
+            return is_valid, errors
+            
+        except Exception as e:
+            errors.append(f"Error validando rango numérico: {str(e)}")
+            return False, errors
     
-    def __init__(self):
-        super().__init__()
+    def validate_data_consistency(self, df: pd.DataFrame) -> Tuple[bool, List[str]]:
+        """
+        Valida consistencia interna de los datos.
         
-        self.expected_columns = [
-            'DTI_CL_INDICADOR', 'Indicador', 'DTI_CL_TRIMESTRE_MOVIL',
-            'Trimestre Móvil', 'DTI_CL_REGION', 'Región', 'DTI_CL_SEXO',
-            'Sexo', 'Value'
-        ]
+        Args:
+            df: DataFrame a validar
+            
+        Returns:
+            Tupla (es_valido, lista_errores)
+        """
+        errors = []
         
-        self.valid_regions = {
-            "_T", "CHL15", "CHL01", "CHL02", "CHL03", "CHL04", "CHL05",
-            "CHL13", "CHL06", "CHL07", "CHL16", "CHL08", "CHL09", "CHL14",
-            "CHL10", "CHL11", "CHL12"
+        try:
+            # Verificar que total = hombres + mujeres
+            if all(col in df.columns for col in ['fuerza_de_trabajo', 'hombres', 'mujeres']):
+                calculated_total = df['hombres'] + df['mujeres']
+                difference = abs(df['fuerza_de_trabajo'] - calculated_total)
+                
+                # Permitir pequeñas diferencias de redondeo
+                tolerance = 0.1
+                inconsistent_rows = (difference > tolerance).sum()
+                
+                if inconsistent_rows > 0:
+                    errors.append(
+                        f"{inconsistent_rows} filas con inconsistencia en totales "
+                        f"(fuerza_de_trabajo ≠ hombres + mujeres)"
+                    )
+            
+            # Verificar duplicados
+            if 'ano_trimestre' in df.columns and 'region' in df.columns:
+                duplicates = df.duplicated(subset=['ano_trimestre', 'region']).sum()
+                if duplicates > 0:
+                    errors.append(f"Encontrados {duplicates} registros duplicados")
+            
+            # Verificar tendencias anómalas (cambios extremos)
+            if 'fuerza_de_trabajo' in df.columns and len(df) > 1:
+                df_sorted = df.sort_values('ano_trimestre')
+                pct_change = df_sorted['fuerza_de_trabajo'].pct_change().abs()
+                extreme_changes = (pct_change > 0.5).sum()  # Cambios > 50%
+                
+                if extreme_changes > 0:
+                    errors.append(f"Detectados {extreme_changes} cambios extremos en fuerza de trabajo")
+            
+            is_valid = len(errors) == 0
+            return is_valid, errors
+            
+        except Exception as e:
+            errors.append(f"Error validando consistencia: {str(e)}")
+            return False, errors
+    
+    def generate_validation_report(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Genera un reporte completo de validación.
+        
+        Args:
+            df: DataFrame a validar
+            
+        Returns:
+            Diccionario con resultados de validación
+        """
+        report = {
+            "timestamp": datetime.now().isoformat(),
+            "dataframe_info": {
+                "rows": len(df),
+                "columns": len(df.columns),
+                "memory_usage_mb": df.memory_usage(deep=True).sum() / 1024 / 1024
+            },
+            "validations": {},
+            "overall_valid": True,
+            "errors": [],
+            "warnings": []
         }
         
-        self.valid_genders = {"_T", "M", "F"}
+        try:
+            # Validación básica de DataFrame
+            report["validations"]["basic_structure"] = self.validate_dataframe(df)
+            
+            # Validación específica de Los Ríos
+            is_valid, errors = self.validate_los_rios_data(df)
+            report["validations"]["los_rios_data"] = is_valid
+            if not is_valid:
+                report["errors"].extend(errors)
+            
+            # Validación de consistencia
+            is_consistent, consistency_errors = self.validate_data_consistency(df)
+            report["validations"]["data_consistency"] = is_consistent
+            if not is_consistent:
+                report["errors"].extend(consistency_errors)
+            
+            # Información adicional de calidad de datos
+            report["data_quality"] = self._calculate_data_quality_metrics(df)
+            
+            # Determinar validez general
+            report["overall_valid"] = all(report["validations"].values())
+            
+            return report
+            
+        except Exception as e:
+            report["errors"].append(f"Error generando reporte: {str(e)}")
+            report["overall_valid"] = False
+            return report
     
-    def validate_labour_force_data(self, df: pd.DataFrame) -> Dict[str, bool]:
-        """Validate Labour Force specific data requirements."""
-        results = self.validate_dataframe(
-            df,
-            required_columns=self.expected_columns,
-            numeric_columns=['Value']
-        )
-        
-        # Labour Force specific validations
-        results['valid_regions'] = self._check_valid_regions(df)
-        results['valid_genders'] = self._check_valid_genders(df)
-        results['valid_time_periods'] = self._check_valid_time_periods(df)
-        results['positive_values'] = self._check_positive_values(df)
-        
-        return results
-    
-    def _check_valid_regions(self, df: pd.DataFrame) -> bool:
-        """Check if all region codes are valid."""
-        if 'DTI_CL_REGION' not in df.columns:
-            return False
-        
-        invalid_regions = set(df['DTI_CL_REGION'].unique()) - self.valid_regions
-        
-        if invalid_regions:
-            logger.warning(f"Found invalid region codes: {invalid_regions}")
-            return False
-        
-        return True
-    
-    def _check_valid_genders(self, df: pd.DataFrame) -> bool:
-        """Check if all gender codes are valid."""
-        if 'DTI_CL_SEXO' not in df.columns:
-            return False
-        
-        invalid_genders = set(df['DTI_CL_SEXO'].unique()) - self.valid_genders
-        
-        if invalid_genders:
-            logger.warning(f"Found invalid gender codes: {invalid_genders}")
-            return False
-        
-        return True
-    
-    def _check_valid_time_periods(self, df: pd.DataFrame) -> bool:
-        """Check if time periods follow expected format."""
-        if 'DTI_CL_TRIMESTRE_MOVIL' not in df.columns:
-            return False
-        
-        # Expected format: YYYY-VQQ (e.g., 2010-V02)
-        pattern = r'^\d{4}-V\d{2}$'
-        
-        invalid_periods = []
-        for period in df['DTI_CL_TRIMESTRE_MOVIL'].unique():
-            if not re.match(pattern, str(period)):
-                invalid_periods.append(period)
-        
-        if invalid_periods:
-            logger.warning(f"Found invalid time period formats: {invalid_periods}")
-            return False
-        
-        return True
-    
-    def _check_positive_values(self, df: pd.DataFrame) -> bool:
-        """Check if labour force values are positive."""
-        if 'Value' not in df.columns:
-            return False
-        
-        # Convert to numeric and check for negative values
-        numeric_values = pd.to_numeric(df['Value'], errors='coerce')
-        negative_count = (numeric_values < 0).sum()
-        
-        if negative_count > 0:
-            logger.warning(f"Found {negative_count} negative labour force values")
-            return False
-        
-        return True
+    def _calculate_data_quality_metrics(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Calcula métricas de calidad de datos."""
+        try:
+            metrics = {
+                "completeness": {},
+                "uniqueness": {},
+                "validity": {}
+            }
+            
+            # Completitud (% de valores no nulos)
+            for col in df.columns:
+                non_null_pct = (df[col].notna().sum() / len(df)) * 100
+                metrics["completeness"][col] = round(non_null_pct, 2)
+            
+            # Unicidad (% de valores únicos)
+            for col in df.columns:
+                unique_pct = (df[col].nunique() / len(df)) * 100
+                metrics["uniqueness"][col] = round(unique_pct, 2)
+            
+            # Validez de tipos de datos
+            for col in df.columns:
+                dtype_str = str(df[col].dtype)
+                metrics["validity"][col] = dtype_str
+            
+            return metrics
+            
+        except Exception as e:
+            self.logger.error(f"Error calculando métricas de calidad: {str(e)}")
+            return {}

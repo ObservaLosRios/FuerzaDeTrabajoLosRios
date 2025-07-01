@@ -1,26 +1,27 @@
 """
-INE Chile Labour Force Analysis - Main package.
-
-A professional Data Science project for analyzing Chilean labor force data
-from the National Institute of Statistics (INE).
-
-Features:
-- Clean Code architecture with SOLID principles
-- Modular ETL pipeline
-- Professional data validation
-- Interactive visualizations
-- Predictive modeling capabilities
-- Comprehensive documentation
-
-Author: Bruno San Martin
-License: MIT
+Paquete principal del proyecto de análisis de Los Ríos
 """
 
-__version__ = "0.1.0"
-__author__ = "Bruno San Martin"
-__email__ = "bruno@example.com"
-__license__ = "MIT"
+__version__ = "1.0.0"
+__author__ = "Bruno San Martín"
+__email__ = "bruno.sanmartin@uach.cl"
+__description__ = "Análisis profesional de la Fuerza de Trabajo en la Región de Los Ríos"
 
-from . import etl, utils, visualization, models
+from .etl import DataExtractor, DataTransformer, DataLoader
+from .models import LabourAnalyzer, DemographicsAnalyzer, StatisticsEngine
+from .utils import DataValidator, LoggerConfig, HelperFunctions
+from .visualization import ChartFactory, DashboardBuilder
 
-__all__ = ["etl", "utils", "visualization", "models"]
+__all__ = [
+    "DataExtractor",
+    "DataTransformer", 
+    "DataLoader",
+    "LabourAnalyzer",
+    "DemographicsAnalyzer",
+    "StatisticsEngine",
+    "DataValidator",
+    "LoggerConfig",
+    "HelperFunctions",
+    "ChartFactory",
+    "DashboardBuilder"
+]

@@ -1,14 +1,12 @@
 """
-Visualization package for professional charts and dashboards.
+Módulo de visualización para el proyecto Los Ríos
+Clean Code: separación de responsabilidades para gráficos y dashboards
 """
 
-from .charts import LabourForceCharts, StatisticalCharts, BaseChartMaker
-
-__version__ = "0.1.0"
-__author__ = "Bruno San Martin"
+from .chart_factory import ChartFactory
+from .dashboard_builder import DashboardBuilder
 
 __all__ = [
-    "LabourForceCharts",
-    "StatisticalCharts", 
-    "BaseChartMaker"
+    "ChartFactory",
+    "DashboardBuilder"
 ]
