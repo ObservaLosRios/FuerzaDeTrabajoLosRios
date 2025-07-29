@@ -39,3 +39,6 @@ rich==13.7.0
 
 # Development
 pre-commit==3.6.0
+
+# Dashboard web
+voila==0.5.8
