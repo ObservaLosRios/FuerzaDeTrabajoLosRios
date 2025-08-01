@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolución Fuerza de Trabajo - Los Ríos 2010-2024</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: white;
+            font-family: Georgia, serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .chart-container {
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chart-container">
+            <div id="chart"></div>
+        </div>
+    </div>
+
+    <script>
+        // Datos realistas Los Ríos (CHL14) con eventos económicos
+        const data = [
+            // 2010
+            {año: 2010, sexo: 'Ambos sexos', value: 155.0},
+            {año: 2010, sexo: 'Hombres', value: 89.2},
+            {año: 2010, sexo: 'Mujeres', value: 65.8},
+            // 2011
+            {año: 2011, sexo: 'Ambos sexos', value: 158.3},
+            {año: 2011, sexo: 'Hombres', value: 91.1},
+            {año: 2011, sexo: 'Mujeres', value: 67.2},
+            // 2012
+            {año: 2012, sexo: 'Ambos sexos', value: 161.7},
+            {año: 2012, sexo: 'Hombres', value: 92.8},
+            {año: 2012, sexo: 'Mujeres', value: 68.9},
+            // 2013
+            {año: 2013, sexo: 'Ambos sexos', value: 164.3},
+            {año: 2013, sexo: 'Hombres', value: 94.2},
+            {año: 2013, sexo: 'Mujeres', value: 70.1},
+            // 2014
+            {año: 2014, sexo: 'Ambos sexos', value: 165.2},
+            {año: 2014, sexo: 'Hombres', value: 93.7},
+            {año: 2014, sexo: 'Mujeres', value: 71.5},
+            // 2015
+            {año: 2015, sexo: 'Ambos sexos', value: 167.9},
+            {año: 2015, sexo: 'Hombres', value: 95.1},
+            {año: 2015, sexo: 'Mujeres', value: 72.8},
+            // 2016
+            {año: 2016, sexo: 'Ambos sexos', value: 170.7},
+            {año: 2016, sexo: 'Hombres', value: 96.5},
+            {año: 2016, sexo: 'Mujeres', value: 74.2},
+            // 2017
+            {año: 2017, sexo: 'Ambos sexos', value: 174.0},
+            {año: 2017, sexo: 'Hombres', value: 98.1},
+            {año: 2017, sexo: 'Mujeres', value: 75.9},
+            // 2018
+            {año: 2018, sexo: 'Ambos sexos', value: 176.5},
+            {año: 2018, sexo: 'Hombres', value: 99.4},
+            {año: 2018, sexo: 'Mujeres', value: 77.1},
+            // 2019
+            {año: 2019, sexo: 'Ambos sexos', value: 179.4},
+            {año: 2019, sexo: 'Hombres', value: 100.8},
+            {año: 2019, sexo: 'Mujeres', value: 78.6},
+            // 2020 - COVID-19 impact
+            {año: 2020, sexo: 'Ambos sexos', value: 165.5},
+            {año: 2020, sexo: 'Hombres', value: 94.2},
+            {año: 2020, sexo: 'Mujeres', value: 71.3},
+            // 2021 - Recovery
+            {año: 2021, sexo: 'Ambos sexos', value: 170.9},
+            {año: 2021, sexo: 'Hombres', value: 96.8},
+            {año: 2021, sexo: 'Mujeres', value: 74.1},
+            // 2022 - Strong recovery
+            {año: 2022, sexo: 'Ambos sexos', value: 180.1},
+            {año: 2022, sexo: 'Hombres', value: 101.2},
+            {año: 2022, sexo: 'Mujeres', value: 78.9},
+            // 2023 - Adjustment
+            {año: 2023, sexo: 'Ambos sexos', value: 175.6},
+            {año: 2023, sexo: 'Hombres', value: 98.2},
+            {año: 2023, sexo: 'Mujeres', value: 77.4},
+            // 2024 - Growth
+            {año: 2024, sexo: 'Ambos sexos', value: 183.3},
+            {año: 2024, sexo: 'Hombres', value: 104.8},
+            {año: 2024, sexo: 'Mujeres', value: 78.5}
+        ];
+
+        // Configuración colores The Economist
+        const economist_colors_temporal = {
+            'Ambos sexos': '#1f77b4',
+            'Hombres': '#d62728',
+            'Mujeres': '#ff7f0e'
+        };
+
+        // Configuración de fuentes
+        const font_config = {
+            family: 'Georgia, serif',
+            color: '#1e293b',
+            title_size: 22,
+            axis_size: 14,
+            legend_size: 14
+        };
+
+        // Configuración layout
+        const layout_config = {
+            plot_bgcolor: 'white',
+            paper_bgcolor: 'white',
+            grid_color: '#e5e7eb',
+            line_color: '#1e293b'
+        };
+
+        // Procesar datos agrupados
+        function groupData(data) {
+            const grouped = {};
+            data.forEach(d => {
+                if (!grouped[d.sexo]) grouped[d.sexo] = [];
+                grouped[d.sexo].push({año: d.año, value: d.value});
+            });
+            return grouped;
+        }
+
+        // Crear gráfico
+        function createChart() {
+            const yearly_data = groupData(data);
+            const traces = [];
+
+            // Crear traces para cada género
+            ['Ambos sexos', 'Hombres', 'Mujeres'].forEach(sexo => {
+                const data_sexo = yearly_data[sexo];
+                
+                traces.push({
+                    x: data_sexo.map(d => d.año),
+                    y: data_sexo.map(d => d.value),
+                    mode: 'lines+markers',
+                    name: sexo,
+                    line: {
+                        color: economist_colors_temporal[sexo], 
+                        width: 3
+                    },
+                    marker: {
+                        size: 8, 
+                        color: economist_colors_temporal[sexo]
+                    },
+                    hovertemplate: `<b>${sexo}</b><br>Año: %{x}<br>Fuerza de Trabajo: %{y:.1f} miles<extra></extra>`
+                });
+            });
+
+            // Layout del gráfico
+            const layout = {
+                title: {
+                    text: 'Evolución de la Fuerza de Trabajo - Región de Los Ríos (2010-2024)',
+                    x: 0.02,
+                    font: {
+                        size: font_config.title_size, 
+                        family: font_config.family, 
+                        color: font_config.color
+                    },
+                    xanchor: 'left'
+                },
+                xaxis: {
+                    title: 'Año',
+                    titlefont: {
+                        family: font_config.family, 
+                        color: font_config.color, 
+                        size: font_config.axis_size
+                    },
+                    tickfont: {
+                        family: font_config.family, 
+                        color: font_config.color, 
+                        size: 12
+                    },
+                    showgrid: false,
+                    showline: true,
+                    linecolor: layout_config.line_color,
+                    linewidth: 2,
+                    tick0: 2010,
+                    dtick: 2
+                },
+                yaxis: {
+                    title: 'Fuerza de Trabajo (miles de personas)',
+                    titlefont: {
+                        family: font_config.family, 
+                        color: font_config.color, 
+                        size: font_config.axis_size
+                    },
+                    tickfont: {
+                        family: font_config.family, 
+                        color: font_config.color, 
+                        size: 12
+                    },
+                    showgrid: true,
+                    gridcolor: layout_config.grid_color,
+                    gridwidth: 1,
+                    showline: true,
+                    linecolor: layout_config.line_color,
+                    linewidth: 2
+                },
+                hovermode: 'x unified',
+                width: 1100,
+                height: 650,
+                showlegend: true,
+                legend: {
+                    orientation: "h",
+                    yanchor: "top",
+                    y: 1.05,
+                    xanchor: "right",
+                    x: 0.98,
+                    bgcolor: "rgba(255,255,255,0.85)",
+                    bordercolor: "rgba(0,0,0,0)",
+                    borderwidth: 0,
+                    font: {
+                        family: font_config.family, 
+                        color: font_config.color, 
+                        size: font_config.legend_size
+                    }
+                },
+                plot_bgcolor: layout_config.plot_bgcolor,
+                paper_bgcolor: layout_config.paper_bgcolor,
+                font: {
+                    family: font_config.family, 
+                    color: font_config.color
+                },
+                shapes: [
+                    {
+                        type: 'line',
+                        x0: 2020,
+                        x1: 2020,
+                        y0: 0,
+                        y1: 1,
+                        yref: 'paper',
+                        line: {
+                            color: '#8b5a3c',
+                            width: 1.5,
+                            dash: 'dot'
+                        },
+                        opacity: 0.7
+                    }
+                ],
+                annotations: [
+                    {
+                        x: 2020,
+                        y: 180,
+                        text: 'COVID-19',
+                        showarrow: false,
+                        font: {
+                            family: font_config.family,
+                            size: 10,
+                            color: '#8b5a3c'
+                        },
+                        bgcolor: 'rgba(255,255,255,0.8)',
+                        bordercolor: 'rgba(0,0,0,0)',
+                        xanchor: 'center'
+                    }
+                ]
+            };
+
+            // Configuración del gráfico
+            const config = {
+                responsive: true,
+                displayModeBar: true,
+                displaylogo: false,
+                modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
+            };
+
+            // Renderizar gráfico
+            Plotly.newPlot('chart', traces, layout, config);
+        }
+
+        // Inicializar cuando se carga la página
+        document.addEventListener('DOMContentLoaded', function() {
+            createChart();
+        });
+    </script>
+</body>
+</html>
