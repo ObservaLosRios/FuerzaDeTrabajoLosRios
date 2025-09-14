@@ -38,7 +38,7 @@
                 </div>
                 <!-- Contenedor del gráfico Plotly exportado -->
                 <div id="plot-embed">
-                    <iframe id="plot-iframe" title="Fuerza de Trabajo - Los Ríos" loading="lazy"></iframe>
+                    <div id="plot" title="Fuerza de Trabajo - Los Ríos"></div>
                 </div>
             </div>
         </section>        <!-- Secciones dinámicas se generarán aquí -->
@@ -57,18 +57,38 @@
     <!-- Tooltip global -->
     <div class="tooltip" id="tooltip"></div>
 
-        <script src="interactive.js"></script>
-        <script>
-            // Forzar carga del fragmento Plotly (sin textos de ejecución) con cache-busting
-            (function() {
-                const iframe = document.getElementById('plot-iframe');
-                const embed = document.getElementById('plot-embed');
-                const ts = Date.now();
-                const plotlyFragmentPath = `plotly_los_rios.html?v=${ts}`;
+            <script src="interactive.js"></script>
+            <!-- Cargar Plotly desde CDN -->
+            <script src="https://cdn.plot.ly/plotly-2.26.0.min.js"></script>
+            <script>
+                // Renderizar el gráfico inline (sin archivos externos)
+                (function() {
+                    const years = [2010,2011,2012,2013,2014,2015,2016,2017,2018,2019,2020,2021,2022,2023,2024];
+                    const hombres = [89.2,91.1,92.8,94.2,93.7,95.1,96.5,98.1,99.4,100.8,94.2,96.8,101.2,98.2,104.8];
+                    const mujeres = [65.8,67.2,68.9,70.1,71.5,72.8,74.2,75.9,77.1,78.6,71.3,74.1,78.9,77.4,78.5];
+                    const ambos = hombres.map((h,i) => Math.round((h + mujeres[i]) * 10)/10);
 
-                iframe.src = plotlyFragmentPath;
-                embed.style.display = 'block';
-            })();
-        </script>
+                    const traces = [
+                        { x: years, y: ambos, name: 'Ambos sexos', mode: 'lines+markers', type: 'scatter', line: {color: '#1f77b4', width: 3}, marker: {size: 8, color: '#1f77b4'}, hovertemplate: '<b>Ambos sexos</b><br>Año: %{x}<br>Fuerza de Trabajo: %{y:.1f} miles<br><extra></extra>' },
+                        { x: years, y: hombres, name: 'Hombres', mode: 'lines+markers', type: 'scatter', line: {color: '#d62728', width: 3}, marker: {size: 8, color: '#d62728'}, hovertemplate: '<b>Hombres</b><br>Año: %{x}<br>Fuerza de Trabajo: %{y:.1f} miles<br><extra></extra>' },
+                        { x: years, y: mujeres, name: 'Mujeres', mode: 'lines+markers', type: 'scatter', line: {color: '#ff7f0e', width: 3}, marker: {size: 8, color: '#ff7f0e'}, hovertemplate: '<b>Mujeres</b><br>Año: %{x}<br>Fuerza de Trabajo: %{y:.1f} miles<br><extra></extra>' }
+                    ];
+
+                    const layout = {
+                        title: { text: 'Evolucion de la Fuerza de Trabajo - Region de Los Rios (2010-2024)', x: 0.02, xanchor: 'left', font: { size: 22, family: 'Georgia, serif', color: '#1e293b' } },
+                        xaxis: { title: { text: 'Año', font: { family: 'Georgia, serif', color: '#1e293b', size: 14 } }, tickfont: { family: 'Georgia, serif', color: '#1e293b', size: 12 }, showgrid: false, gridcolor: '#e5e7eb', gridwidth: 1, showline: true, linecolor: '#1e293b', linewidth: 2, tick0: 2010, dtick: 2 },
+                        yaxis: { title: { text: 'Fuerza de Trabajo (miles de personas)', font: { family: 'Georgia, serif', color: '#1e293b', size: 14 } }, tickfont: { family: 'Georgia, serif', color: '#1e293b', size: 12 }, showgrid: true, gridcolor: '#e5e7eb', gridwidth: 1, showline: true, linecolor: '#1e293b', linewidth: 2 },
+                        hovermode: 'x unified',
+                        showlegend: true,
+                        legend: { orientation: 'h', yanchor: 'top', y: 1.05, xanchor: 'right', x: 0.98, bgcolor: 'rgba(255,255,255,0.85)', bordercolor: 'rgba(0,0,0,0)', borderwidth: 0, font: { family: 'Georgia, serif', color: '#1e293b', size: 14 } },
+                        font: { family: 'Georgia, serif', color: '#1e293b' },
+                        plot_bgcolor: 'white', paper_bgcolor: 'white',
+                        shapes: [{ type: 'line', x0: 2020, x1: 2020, xref: 'x', y0: 0, y1: 1, yref: 'y domain', line: { color: '#8b5a3c', width: 1.5, dash: 'dot' }, opacity: 0.7 }],
+                        annotations: [{ x: 2020, y: Math.max(...ambos) * 0.95, text: 'COVID-19', showarrow: false, font: { family: 'Georgia, serif', size: 10, color: '#8b5a3c' }, bgcolor: 'rgba(255,255,255,0.8)', bordercolor: 'rgba(0,0,0,0)', xanchor: 'center' }]
+                    };
+                    const config = { responsive: true, displayModeBar: true };
+                    Plotly.newPlot('plot', traces, layout, config);
+                })();
+            </script>
 </body>
 </html>
