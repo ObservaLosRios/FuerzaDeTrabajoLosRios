@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plantilla de Visualización - Universidad Austral de Chile</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header Principal -->
+    <header class="main-header">
+        <div class="logos-container">
+            <img src="thumbnail_Logo observa.png" alt="Universidad Austral de Chile - Centro de Estudios Regionales" class="header-logo-left">
+            <img src="thumbnail_images.png" alt="Logo Región" class="header-logo">
+        </div>
+        <div class="header-content">
+            <h1 class="main-title" id="main-title">Evolución de la Fuerza de Trabajo - Región de Los Ríos 2010-2024</h1>
+            <p class="subtitle" id="subtitle">Universidad Austral de Chile - Centro de Estudios Regionales</p>
+        </div>
+    </header>
+    
+    <!-- Navegación -->
+    <nav class="nav-container">
+        <div class="nav-links" id="nav-links">
+            <span class="nav-link" data-section="bienvenida">Fuerza de Trabajo</span>
+        </div>
+    </nav>
+    
+    <!-- Container Principal -->
+    <div class="container">
+        <!-- Sección Principal -->
+        <section id="bienvenida" class="section active">
+            <h2 class="section-title">Análisis Temporal del Mercado Laboral Regional</h2>
+            <div class="chart-section">
+                <div class="chart-placeholder" id="chart-placeholder" style="display:none;">
+                    <span class="placeholder-icon">📊</span>
+                    <p>Cargando visualización de datos laborales...</p>
+                </div>
+                <!-- Contenedor del gráfico Plotly exportado -->
+                <div id="plot-embed">
+                    <iframe id="plot-iframe" title="Fuerza de Trabajo - Los Ríos" loading="lazy"></iframe>
+                </div>
+            </div>
+        </section>        <!-- Secciones dinámicas se generarán aquí -->
+        <div id="dynamic-sections"></div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <p class="footer-text" id="footer-text">
+            Análisis de Fuerza de Trabajo Regional<br>
+            Universidad Austral de Chile - Centro de Estudios Regionales
+        </p>
+        <img src="thumbnail_logo cer.png" alt="Universidad Austral de Chile - Centro de Estudios Regionales" class="footer-logo">
+    </footer>
+
+    <!-- Tooltip global -->
+    <div class="tooltip" id="tooltip"></div>
+
+        <script src="interactive.js"></script>
+        <script>
+            // Forzar carga del fragmento Plotly (sin textos de ejecución) con cache-busting
+            (function() {
+                const iframe = document.getElementById('plot-iframe');
+                const embed = document.getElementById('plot-embed');
+                const ts = Date.now();
+                const plotlyFragmentPath = `plotly_los_rios.html?v=${ts}`;
+
+                iframe.src = plotlyFragmentPath;
+                embed.style.display = 'block';
+            })();
+        </script>
+</body>
+</html>
