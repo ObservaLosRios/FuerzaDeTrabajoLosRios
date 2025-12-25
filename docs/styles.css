@@ -172,6 +172,12 @@ body {
     box-shadow: 0 2px 10px rgba(0,0,0,0.06);
 }
 
+/* Highcharts: mantener tipografía del sitio (sin alterar colores) */
+#plot .highcharts-container,
+#plot .highcharts-container * {
+    font-family: 'Georgia', serif;
+}
+
 /* Mejoras para las visualizaciones */
 .chart-container {
     position: relative;
